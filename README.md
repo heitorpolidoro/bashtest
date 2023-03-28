@@ -1,2 +1,6 @@
 # bashtest
-function to make test bash/shell script easy
+Functions to make test bash/shell script easy
+
+```shell
+source <(curl -s )
+```
