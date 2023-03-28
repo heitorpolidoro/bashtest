@@ -30,9 +30,9 @@ run_tests() {
 }
 
 mock() {
-  mocked_return() {
-    echo "###params=$*###"
-  }
+	mocked_return() {
+		echo "###params=$*###"
+	}
 
 	# shellcheck disable=SC2139
 	# shellcheck disable=SC2140
