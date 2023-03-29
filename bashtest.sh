@@ -1,6 +1,7 @@
 #!/bin/bash
 # Enable expanding aliases in this script
 shopt -s expand_aliases
+TEMP_ENVS=()
 
 assert() {
 	# shellcheck disable=SC2053
@@ -23,6 +24,10 @@ run_tests() {
 				result="ERROR"
 				error_code=1
 			fi
+			for t_env in "${TEMP_ENVS[@]}"; do
+				unset "$t_env"
+			done
+			TEMP_ENVS=()
 			echo -e "$test_function\t$result"
 		fi
 	done
@@ -37,4 +42,12 @@ mock() {
 	# shellcheck disable=SC2139
 	# shellcheck disable=SC2140
 	alias "$1"="echo -n Mocked $1; mocked_return"
+}
+
+set_env() {
+	env_name=$1
+	env_value=$2
+
+	export "$env_name"="$env_value"
+	TEMP_ENVS+=("$env_name")
 }
