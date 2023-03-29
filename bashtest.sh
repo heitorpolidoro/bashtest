@@ -18,9 +18,9 @@ run_tests() {
 	for test_function in $(declare -F); do
 		if [[ "$test_function" = "test"* ]]; then
 			if $test_function; then
-			result="OK"
+				result="OK"
 			else
-			result="ERROR"
+				result="ERROR"
 				error_code=1
 			fi
 			echo -e "$test_function\t$result"
