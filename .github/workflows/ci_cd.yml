@@ -1,15 +1,35 @@
 name: CI/CD
+
 on:
-  push:
+  workflow_dispatch:
     branches:
       - master
-  pull_request:
-    types: [opened, synchronize, reopened]
+  push:
 
 jobs:
+# Except master
+  create-PR:
+    name: Create Pull Request
+    runs-on: ubuntu-latest
+    if: github.ref != 'refs/heads/master'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Creating Pull Request
+        uses: heitorpolidoro/autocreate-pr@master
+        with:
+          automerge: true
+        env:
+          heitorpolidoro: ${{ secrets.HEITORPOLIDORO_PAT }}
+
+# Any branch
   tests:
     name: Tests
     runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -17,25 +37,11 @@ jobs:
       - name: Tests
         run: ./tests.sh
 
-  set-auto-merge:
-    name: Set Pull Request do Automerge
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.event.action != 'synchronize'
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ github.head_ref }}
-
-      - name: Setting to Automerge
-        uses: heitorpolidoro/automerge-pr@master
-        env:
-          heitorpolidoro: ${{ secrets.HEITORPOLIDORO_PAT }}
-
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch'
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -49,6 +55,8 @@ jobs:
   linters:
     name: Linters
     runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -60,12 +68,15 @@ jobs:
         with:
           linters: shellcheck shfmt
 
+# Only master
   create-release:
     name: Create Release
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
     needs:
       - tests
-    if: github.event_name == 'push' || github.event.pull_request.merged == true
+      - linters
+      - sonarcloud
 
     steps:
       - name: Checkout
@@ -73,8 +84,6 @@ jobs:
 
       - name: Create GitHub Release
         id: release
-        uses: heitorpolidoro/auto-release@v1
-        with:
-          version_file: polidoro_command/__init__.py
+        uses: heitorpolidoro/auto-release@master
         env:
           GITHUB_TOKEN: ${{ secrets.HEITORPOLIDORO_PAT }}
