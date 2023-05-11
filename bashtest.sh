@@ -17,7 +17,7 @@ TEMP_ENVS=()
 # RETURN:
 #   true if the 2 strings have a match, false otherwise
 ###################################################################################################
-assert() {
+function assert {
 	actual=$1
 	expected=$2
 	# shellcheck disable=SC2053
@@ -36,15 +36,26 @@ assert() {
 # OUTPUTS:
 #   The parameters to the function
 ###################################################################################################
-mock() {
+function mock {
 	function_name=$1
-	mocked_return() {
-		echo "###params=$*###"
+	shift
+	return_function=$*
+	function mocked_return {
+		echo -n "Mocked $function_name###params=$*###"
 	}
+	if [[ -z "$return_function" ]];
+	then
+	  return_function=mocked_return
+	else
+	  if [[ $(type -t $return_function) != function ]];
+	  then
+	    return_function="echo $return_function"
+	  fi
+	fi
 
 	# shellcheck disable=SC2139
 	# shellcheck disable=SC2140
-	alias "$function_name"="echo -n Mocked $function_name; mocked_return"
+	alias "$function_name"="$return_function"
 }
 
 ###################################################################################################
@@ -53,7 +64,7 @@ mock() {
 #   name: The name of the environment variable
 #   value: The value of the variable
 ###################################################################################################
-set_env() {
+function set_env {
 	env_name=$1
 	env_value=$2
 
@@ -68,7 +79,7 @@ set_env() {
 # RETURN:
 #   0 if all the tests results is "OK", 1 otherwise
 ###################################################################################################
-run_tests() {
+function run_tests {
 	error_code=0
 	for test_function in $(declare -F); do
 		if [[ "$test_function" = "test_"* ]]; then

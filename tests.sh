@@ -14,6 +14,23 @@ test_mock() {
 	assert "$result" "Mocked echo###params=param1 param2###"
 }
 
+# shellcheck disable=SC2116
+test_mocked_return_value() {
+	mock echo "return value"
+	result=$(echo param1 param2)
+	assert "$result" "return value param1 param2"
+}
+
+# shellcheck disable=SC2116
+test_mocked_function() {
+  function mocked_echo() {
+    echo "mocked_echo"
+  }
+	mock echo mocked_echo
+	result=$(echo param1 param2)
+	assert "$result" "mocked_echo"
+}
+
 test_run_tests() {
 	for test_function in $(declare -F); do
 		if [[ "$test_function" = "test"* ]]; then
@@ -27,7 +44,7 @@ test_run_tests() {
 		assert "ERROR" "OK"
 	}
 	result=$(run_tests)
-	assert "$result" "*tests.sh failed in function 'test_error' at line 27.*test_error*ERROR*test_ok*OK*"
+	assert "$result" "*tests.sh failed in function 'test_error' at line *test_error*ERROR*test_ok*OK*"
 }
 
 run_tests
